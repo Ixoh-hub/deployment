@@ -2,7 +2,8 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
 import lightgbm as lgb
 import joblib
 
@@ -39,28 +40,19 @@ def train_model(X, y):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42)
 
-    train_data = lgb.Dataset(X_train, label=y_train)
-    valid_data = lgb.Dataset(X_test, label=y_test, reference=train_data)
-
-    params = {
-        'objective': 'regression',
-        'metric': 'rmse',
-        'verbosity': -1,
-        'seed': 42,
-    }
-
-    model = lgb.train(
-        params,
-        train_data,
-        num_boost_round=1000,
-        valid_sets=[train_data, valid_data],
-        callbacks=[
-            lgb.early_stopping(stopping_rounds=50),
-            lgb.log_evaluation(period=100),
-        ],
+    model = Pipeline(
+        steps=[
+            ('imputer', SimpleImputer(strategy='median')),
+            ('regressor', lgb.LGBMRegressor(
+                objective='regression',
+                n_estimators=1000,
+                random_state=42,
+                verbose=-1,
+            )),
+        ]
     )
-
-    y_pred = model.predict(X_test, num_iteration=model.best_iteration)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
     rmse = np.sqrt(np.mean((y_pred - y_test) ** 2))
     r2 = 1 - np.sum((y_pred - y_test) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2)
 
@@ -76,7 +68,23 @@ def main():
     model, rmse, r2 = train_model(X, y)
 
     model_path = os.path.join(model_dir, 'lightgbm_life_expectancy.pkl')
-    joblib.dump({'model': model, 'features': X.columns.tolist()}, model_path)
+    numeric_ranges = {
+        col: {
+            'min': float(X[col].min(skipna=True)),
+            'max': float(X[col].max(skipna=True)),
+            'median': float(X[col].median(skipna=True)),
+        }
+        for col in X.columns
+    }
+    metadata = {
+        'train_rows': int(X.shape[0]),
+        'feature_count': int(X.shape[1]),
+        'rmse': float(rmse),
+        'r2': float(r2),
+        'feature_ranges': numeric_ranges,
+    }
+
+    joblib.dump({'model': model, 'features': X.columns.tolist(), 'metadata': metadata}, model_path)
 
     print(f"Saved model to: {model_path}")
     print(f"RMSE: {rmse:.4f}")

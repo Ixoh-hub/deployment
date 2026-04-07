@@ -1,0 +1,13 @@
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+*.ipynb
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+venv/
+.venv/
+dist/
+build/
+*.log
