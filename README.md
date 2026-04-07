@@ -88,15 +88,40 @@ docker run -p 8501:8501 -e PORT=8501 life-exp-app
 
 The container has a healthcheck against Streamlit's health endpoint.
 
+## 5) Streamlit Community Cloud (when Render already hosts the API)
+
+Your logs show three separate problems. Fix **all** of them or the app stays on “in the oven” or fails after a long build.
+
+### A) Wrong entry file
+
+Streamlit is starting **`app.py`**. In this repo, `app.py` is **FastAPI**, not Streamlit.
+
+In Streamlit Community Cloud → your app → **Settings** (or the redeploy wizard): set **Main file** to **`streamlit_app.py`**.
+
+### B) `seaborn==0.14.1` breaks the resolver
+
+`uv` reports **no solution** for `seaborn==0.14.1` on their environment (worse on **Python 3.14**).
+
+- If the UI does **not** import seaborn: **remove seaborn** from `requirements.txt`.
+- If it does: use a range such as `seaborn>=0.13.2` instead of `==0.14.1`, or use **`requirements-streamlit-cloud.txt`** from this repo as your Cloud `requirements.txt`.
+
+### C) Python 3.14 + pandas = slow / stuck builds
+
+Logs show **Python 3.14.3** and **pandas** building from **source** (`pandas-2.2.2.tar.gz`), which can take ages and look stuck.
+
+Per [Streamlit’s Python version docs](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app/upgrade-python), you **cannot** change Python after deploy: **delete the Cloud app**, redeploy, and in **Advanced settings** choose **Python 3.12** or **3.11** if offered.
+
+### D) Branch name
+
+Your log shows branch **`master`**. Push fixes to the branch Streamlit is tracking, or change the app to use **`main`**.
+
 ## 6) Hosted page: am I auto-updating it?
 
 No. I changed files on your computer only.
 
 To update your hosted deployment, you must **commit + push** your updated `deployment-repo` to the GitHub repo that your host (Render / Streamlit Cloud / etc.) is connected to. Most hosts redeploy automatically after a push to `main`.
 
-If you tell me which host you’re using (Render vs Streamlit Community Cloud vs something else), I’ll give you the exact click-by-click redeploy settings for it.
-
-## 5) CI pipeline
+## 7) CI pipeline
 
 GitHub Actions workflow at `.github/workflows/ci.yml` runs on push/PR:
 

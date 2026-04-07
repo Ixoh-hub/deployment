@@ -1,0 +1,15 @@
+# Use this file as requirements.txt on Streamlit Community Cloud (UI only).
+# Keeps installs small and avoids packages that break uv/pip on bleeding-edge Python.
+#
+# Do NOT point Streamlit's "Main file" at FastAPI app.py — use streamlit_app.py.
+
+streamlit>=1.40.0,<2
+pandas>=2.2.0,<2.3
+numpy>=2.0,<2.3
+scikit-learn>=1.5,<1.7
+lightgbm>=4.5,<5
+joblib>=1.4,<2
+
+# Only add if your UI actually imports seaborn/matplotlib:
+# seaborn>=0.13.2
+# matplotlib>=3.8.0
