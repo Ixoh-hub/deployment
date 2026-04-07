@@ -1,0 +1,29 @@
+Streamlit Community Cloud — fix for your deployment repo (copy this checklist)
+
+Use this with the GitHub repo you actually connected in Streamlit (your **deployment** repo).
+If logs still show a different repository name than the one you expect, the Cloud app is wired to the wrong GitHub repo — fix it under App settings → Repository.
+
+Your logs show THREE problems at once:
+
+1) WRONG ENTRY FILE
+   Streamlit is running: main module app.py
+   Fix: Cloud dashboard → App → Settings → Main file path → streamlit_app.py
+   (app.py in this project is FastAPI, not Streamlit.)
+
+2) BROKEN REQUIREMENTS
+   - Delete seaborn==0.14.1 from requirements.txt (uv: "unsatisfiable").
+   - Replace the whole requirements.txt with the contents of requirements-streamlit-cloud.txt
+     in this folder (no seaborn, no FastAPI).
+
+3) PYTHON 3.14 + PANDAS SOURCE BUILD
+   pandas==2.2.2 downloaded as .tar.gz and failed during "Preparing metadata".
+   Fix: Delete the Streamlit Cloud app, create again, Advanced settings → Python 3.12 (or 3.11).
+   Docs: https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app/upgrade-python
+
+4) BRANCH
+   Log shows branch master. Push changes to that branch OR change the app to track main.
+
+5) MODEL FILE
+   Ensure models/lightgbm_life_expectancy.pkl is committed and MODEL_PATH matches if you set env vars.
+
+After push: Redeploy / Restart app in Cloud.
