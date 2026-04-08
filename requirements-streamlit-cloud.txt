@@ -1,12 +1,8 @@
-# Paste these lines as requirements.txt in the GitHub repo Streamlit deploys (your deployment repo).
-# 1) In Streamlit Cloud → redeploy → Advanced settings → set Python to 3.12 (or 3.11).
-#    Building pandas from source on Python 3.14 is what caused your long hang + failure.
-# 2) App settings → Main file must be streamlit_app.py (not app.py — that is FastAPI).
-# 3) Remove seaborn==0.14.1 entirely unless you truly need it; it breaks uv on Cloud.
+# Streamlit Community Cloud: replace requirements.txt with ONLY these lines (no sklearn, no seaborn).
+# Main file MUST be streamlit_app.py. Prefer Python 3.12 in Advanced settings (avoids pandas source builds on 3.14).
 
 streamlit==1.44.1
 pandas==2.2.3
 numpy==2.2.4
-scikit-learn==1.6.1
 lightgbm==4.6.0
 joblib==1.4.2

@@ -1,30 +1,13 @@
 FROM python:3.11-slim
+WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    APP_HOME=/app \
-    PORT=8501
-
-WORKDIR ${APP_HOME}
-
-# LightGBM runtime + healthcheck dependency.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgomp1 curl \
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . ${APP_HOME}
-
-# Run as non-root in production.
-RUN useradd -m appuser && chown -R appuser:appuser ${APP_HOME}
-USER appuser
+COPY . /app
 
 EXPOSE 8501
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:${PORT}/_stcore/health || exit 1
-
-CMD ["sh", "-c", "streamlit run streamlit_app.py --server.port=${PORT} --server.address=0.0.0.0"]
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
